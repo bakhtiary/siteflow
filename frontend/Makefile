@@ -1,3 +1,3 @@
-deploy: build
+deploy:
 	npx wrangler deploy
 
