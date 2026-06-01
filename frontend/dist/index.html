@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;1,9..144,300;1,9..144,400&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{font-family:'Geist Mono',monospace;background:#faf8f4;color:#1a1814;min-height:100vh}
+  .page{max-width:860px;margin:0 auto;padding:80px 32px}
+  .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:96px}
+  .logo{font-family:'Fraunces',serif;font-size:17px;font-weight:300;color:#1a1814;letter-spacing:-0.01em}
+  .logo span{font-style:italic;color:#c05c28}
+  .nav{display:flex;gap:28px}
+  .nav a{font-size:11px;letter-spacing:0.1em;color:#9a9080;text-decoration:none;text-transform:uppercase}
+  .nav a:hover{color:#1a1814}
+  .badge{display:inline-flex;align-items:center;gap:8px;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:#c05c28;border:1px solid #f0cdb8;background:#fff8f4;padding:6px 14px;border-radius:100px;margin-bottom:32px}
+  .badge::before{content:'';width:6px;height:6px;border-radius:50%;background:#c05c28}
+  h1{font-family:'Fraunces',serif;font-size:clamp(50px,7vw,82px);font-weight:300;line-height:1.05;letter-spacing:-0.03em;color:#1a1814;margin-bottom:28px}
+  h1 em{font-style:italic;color:#c05c28}
+  .subhead{font-size:12px;color:#7a7060;line-height:1.9;max-width:400px;margin-bottom:64px;letter-spacing:0.02em}
+  .input-wrap{background:#fff;border:1.5px solid #e8e0d4;border-radius:10px;display:flex;overflow:hidden;margin-bottom:12px;transition:border-color 0.2s,box-shadow 0.2s}
+  .input-wrap:focus-within{border-color:#c05c28;box-shadow:0 0 0 4px rgba(192,92,40,0.08)}
+  .prefix{padding:0 16px;font-size:11px;color:#b0a090;border-right:1.5px solid #e8e0d4;display:flex;align-items:center;background:#faf8f4;letter-spacing:0.06em;white-space:nowrap}
+  input[type=text]{flex:1;border:none;outline:none;padding:17px 18px;font-family:'Geist Mono',monospace;font-size:13px;color:#1a1814;background:transparent}
+  input[type=text]::placeholder{color:#c8c0b4}
+  .btn{padding:15px 28px;background:#1a1814;border:none;font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:#faf8f4;cursor:pointer;transition:background 0.15s;white-space:nowrap}
+  .btn:hover{background:#3a342c}
+  .btn:active{transform:scale(0.98)}
+  .hint{font-size:10px;color:#b0a090;letter-spacing:0.08em}
+  .stats{display:flex;gap:40px;margin-top:56px;padding-top:40px;border-top:1px solid #e8e0d4}
+  .stat-num{font-family:'Fraunces',serif;font-size:36px;font-weight:300;color:#1a1814;letter-spacing:-0.03em;line-height:1}
+  .stat-label{font-size:10px;color:#9a9080;letter-spacing:0.12em;text-transform:uppercase;margin-top:4px}
+  .right-col{position:relative;margin-top:96px;border-top:1px solid #e8e0d4;padding-top:48px}
+  .section-label{font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:#b0a090;margin-bottom:32px}
+  .steps{display:flex;flex-direction:column;gap:0}
+  .step{display:flex;gap:24px;padding:24px 0;border-bottom:1px solid #f0ebe2}
+  .step-num{font-family:'Fraunces',serif;font-size:22px;font-weight:300;color:#ddd4c4;width:32px;flex-shrink:0;line-height:1}
+  .step-body{}
+  .step-title{font-size:13px;color:#1a1814;margin-bottom:4px;letter-spacing:0.02em}
+  .step-desc{font-size:11px;color:#9a9080;line-height:1.7;letter-spacing:0.02em}
+  .preview-card{margin-top:48px;background:#fff;border:1px solid #e8e0d4;border-radius:12px;overflow:hidden}
+  .card-bar{background:#f4f0ea;padding:12px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #e8e0d4}
+  .dots{display:flex;gap:6px}
+  .dot{width:10px;height:10px;border-radius:50%}
+  .card-url{flex:1;background:#fff;border:1px solid #e0d8ce;border-radius:4px;padding:5px 12px;font-size:10px;color:#9a9080;letter-spacing:0.05em;text-align:center}
+  .card-body{padding:28px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+  .skel{border-radius:4px;background:#f4f0ea}
+  .two-col{grid-column:span 2}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+  .page > *{animation:fadeUp 0.5s ease both}
+  .topbar{animation-delay:0s}
+  .badge{animation-delay:0.05s}
+  h1{animation-delay:0.1s}
+  .subhead{animation-delay:0.15s}
+  .input-wrap{animation-delay:0.2s}
+  .hint{animation-delay:0.22s}
+  .stats{animation-delay:0.28s}
+  .right-col{animation-delay:0.32s}
+  @media(max-width:580px){.topbar .nav{display:none}.card-body{grid-template-columns:1fr 1fr}.stats{gap:24px}}
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="topbar">
+    <div class="logo">make<span>site</span></div>
+    <nav class="nav">
+      <a href="#">Docs</a>
+      <a href="#">Pricing</a>
+      <a href="#">Log in</a>
+    </nav>
+  </div>
+
+  <div class="badge">Now in public beta</div>
+  <h1>Build sites<br>from <em>any</em> URL.</h1>
+  <p class="subhead">Paste a link to any website. We reverse-engineer the layout, copy, and structure — and hand it back to you, fully editable.</p>
+
+  <div class="input-wrap" id="inputWrap">
+    <span class="prefix">https://</span>
+    <input type="text" placeholder="paste a website URL here" id="urlInput" />
+    <button class="btn" onclick="handleClone()">Clone it</button>
+  </div>
+  <p class="hint" id="hintText">Try: stripe.com, linear.app, vercel.com</p>
+
+  <div class="stats">
+    <div>
+      <div class="stat-num">12k+</div>
+      <div class="stat-label">Sites cloned</div>
+    </div>
+    <div>
+      <div class="stat-num">~8s</div>
+      <div class="stat-label">Avg. clone time</div>
+    </div>
+    <div>
+      <div class="stat-num">100%</div>
+      <div class="stat-label">Editable output</div>
+    </div>
+  </div>
+
+  <div class="right-col">
+    <div class="section-label">How it works</div>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <div class="step-title">Paste any URL</div>
+          <div class="step-desc">Any public website — landing pages, portfolios, SaaS marketing sites, and more.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <div class="step-title">We reconstruct it</div>
+          <div class="step-desc">Our engine rebuilds the full layout in clean HTML and CSS. No screenshots, no iframes.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <div class="step-title">Edit and deploy</div>
+          <div class="step-desc">Modify content, swap colors, change copy — then publish to your own domain instantly.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="preview-card" id="previewCard">
+      <div class="card-bar">
+        <div class="dots">
+          <div class="dot" style="background:#f0cdb8"></div>
+          <div class="dot" style="background:#e8e0d4"></div>
+          <div class="dot" style="background:#e8e0d4"></div>
+        </div>
+        <div class="card-url" id="cardUrl">yoursite.com</div>
+      </div>
+      <div class="card-body">
+        <div class="skel two-col" style="height:14px"></div>
+        <div class="skel" style="height:14px"></div>
+        <div class="skel" style="height:10px;opacity:0.6"></div>
+        <div class="skel" style="height:10px;opacity:0.6"></div>
+        <div class="skel" style="height:10px;opacity:0.6"></div>
+        <div class="skel two-col" style="height:32px;background:#f0cdb8;margin-top:4px"></div>
+        <div class="skel" style="height:32px;margin-top:4px"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function handleClone(){
+  const val = document.getElementById('urlInput').value.trim();
+  const btn = document.querySelector('.btn');
+  const hint = document.getElementById('hintText');
+  const cardUrl = document.getElementById('cardUrl');
+  if(!val){document.getElementById('urlInput').focus();return}
+  btn.textContent = 'Cloning...';
+  btn.style.background = '#c05c28';
+  hint.textContent = 'Reconstructing layout...';
+  const display = val.replace(/^https?:\/\//,'');
+  setTimeout(()=>{
+    cardUrl.textContent = display;
+    hint.textContent = '✓ Done — your clone is ready to edit';
+    hint.style.color = '#c05c28';
+    btn.textContent = 'Clone it';
+    btn.style.background = '';
+    document.getElementById('urlInput').value = '';
+  }, 2000);
+}
+document.getElementById('urlInput').addEventListener('keydown',e=>{if(e.key==='Enter')handleClone()});
+</script>
+</body>
+</html>
