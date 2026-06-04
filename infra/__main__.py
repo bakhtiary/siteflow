@@ -1,37 +1,38 @@
+from urllib.parse import parse_qsl, quote, urlencode, urlsplit, urlunsplit
+
 import pulumi
-import pulumi_cloudflare as cloudflare
 import pulumi_docker as docker
 import pulumi_gcp as gcp
 
 # Initialize Pulumi Configuration
 config = pulumi.Config()
 
-# Secrets and structural configuration variables
 neon_database_url = config.require_secret("neonDatabaseUrl")
 keycloak_admin_user = config.get("keycloakAdminUser") or "admin"
 keycloak_admin_password = config.require_secret("keycloakAdminPassword")
-cloudflare_account_id = config.require("cloudflareAccountId")
 
-# EUROPEAN LOCATION DEFINITIONS
-# Using europe-west3 (Frankfurt, Germany) as the primary hub
-EUROPE_REGION = "europe-west3"
+REGION = "europe-west3"
 
-# 1. CREATE GOOGLE ARTIFACT REGISTRY IN EUROPE
 siteflow_registry = gcp.artifactregistry.Repository(
     "siteflow-registry",
     repository_id="siteflow",
-    description="European Docker repository for siteflow platform images",
+    description="siteflow platform images",
     format="DOCKER",
-    location=EUROPE_REGION, # Placed in Frankfurt
+    location=REGION,
 )
 
-# 2. AUTOMATICALLY BUILD AND PUSH THE KEYCLOAK DOCKER IMAGE
-# Constructs the target URL using the European domain: europe-west3-docker.pkg.dev
 keycloak_image_url = pulumi.Output.all(
     siteflow_registry.location, siteflow_registry.project, siteflow_registry.repository_id
 ).apply(
     lambda args: f"{args[0]}-docker.pkg.dev/{args[1]}/{args[2]}/keycloak-custom:latest"
 )
+
+placeholder_image_url = pulumi.Output.all(
+    siteflow_registry.location, siteflow_registry.project, siteflow_registry.repository_id
+).apply(
+    lambda args: f"{args[0]}-docker.pkg.dev/{args[1]}/{args[2]}/siteflow-placeholder:latest"
+)
+
 
 keycloak_docker_image = docker.Image(
     "keycloak-custom-image",
@@ -43,16 +44,60 @@ keycloak_docker_image = docker.Image(
     image_name=keycloak_image_url,
 )
 
-# 3. PROVISION KEYCLOAK AUTHENTICATION SERVICE (GCP Cloud Run in Europe)
+placeholder_docker_image = docker.Image(
+    "placeholder-custom-image",
+    build=docker.DockerBuildArgs(
+        context="./placeholderService",
+        dockerfile="./placeholderService/Dockerfile",
+        platform="linux/amd64",
+    ),
+    image_name=placeholder_image_url,
+)
+
+
+def _postgres_url_to_jdbc(url: str) -> str:
+    if url.startswith("jdbc:postgresql://"):
+        return url
+
+    parsed = urlsplit(url)
+    if parsed.scheme not in {"postgres", "postgresql"}:
+        return url
+
+    query = dict(parse_qsl(parsed.query, keep_blank_values=True))
+
+    if parsed.username:
+        query.setdefault("user", parsed.username)
+    if parsed.password:
+        query.setdefault("password", parsed.password)
+
+    hostname = parsed.hostname or ""
+    if ":" in hostname and not hostname.startswith("["):
+        hostname = f"[{hostname}]"
+
+    netloc = hostname
+    if parsed.port:
+        netloc = f"{netloc}:{parsed.port}"
+
+    jdbc_url = urlunsplit(
+        (
+            "jdbc:postgresql",
+            netloc,
+            parsed.path,
+            urlencode(query, quote_via=quote),
+            "",
+        )
+    )
+    return jdbc_url
+
 keycloak_service = gcp.cloudrunv2.Service(
     "keycloak-auth",
-    location=EUROPE_REGION, # Placed in Frankfurt
+    location=REGION, # Placed in Frankfurt
     template=gcp.cloudrunv2.ServiceTemplateArgs(
         scaling=gcp.cloudrunv2.ServiceTemplateScalingArgs(max_instance_count=5),
         containers=[
             gcp.cloudrunv2.ServiceTemplateContainerArgs(
                 image=keycloak_docker_image.image_name,
-                args=["start", "--optimized"],
+                args=["start", "--optimized", "--hostname-strict", "false"],
                 envs=[
                     gcp.cloudrunv2.ServiceTemplateContainerEnvArgs(
                         name="KEYCLOAK_ADMIN", value=keycloak_admin_user
@@ -73,9 +118,7 @@ keycloak_service = gcp.cloudrunv2.Service(
                         name="KC_HTTP_ENABLED", value="true"
                     ),
                 ],
-                ports=[
-                    gcp.cloudrunv2.ServiceTemplateContainerPortArgs(container_port=8080)
-                ],
+                ports=gcp.cloudrunv2.ServiceTemplateContainerPortsArgs(container_port=8080),
                 resources=gcp.cloudrunv2.ServiceTemplateContainerResourcesArgs(
                     limits={"cpu": "2", "memory": "2Gi"}
                 ),
@@ -84,7 +127,6 @@ keycloak_service = gcp.cloudrunv2.Service(
     ),
 )
 
-# Give Keycloak public web access permissions
 gcp.cloudrunv2.ServiceIamBinding(
     "keycloak-public-access",
     project=keycloak_service.project,
@@ -94,18 +136,17 @@ gcp.cloudrunv2.ServiceIamBinding(
     members=["allUsers"],
 )
 
-# 4. PROVISION THE PYTHON BACKEND SERVICE (GCP Cloud Run in Europe)
 python_backend_service = gcp.cloudrunv2.Service(
     "python-backend",
-    location=EUROPE_REGION, # Placed in Frankfurt
+    location=REGION,
     template=gcp.cloudrunv2.ServiceTemplateArgs(
-        timeout="1200s", # Retains 20-minute execution window for website generation tasks
+        timeout="1200s",
         containers=[
             gcp.cloudrunv2.ServiceTemplateContainerArgs(
-                image="gcr.io/your-gcp-project-id/python-backend:latest", # Can be changed to use the siteflow registry asset as well
+                image=placeholder_docker_image,
                 envs=[
                     gcp.cloudrunv2.ServiceTemplateContainerEnvArgs(
-                        name="DATABASE_URL", value=neon_database_url
+                        name="DATABASE_URL", value=neon_database_url.apply(_postgres_url_to_jdbc)
                     ),
                     gcp.cloudrunv2.ServiceTemplateContainerEnvArgs(
                         name="KEYCLOAK_URL", value=keycloak_service.uri
@@ -128,31 +169,6 @@ gcp.cloudrunv2.ServiceIamBinding(
     members=["allUsers"],
 )
 
-# 5. PROVISION THE FRONTEND SYSTEM (Cloudflare Pages - Globally optimized, heavily cached in Europe)
-frontend_app = cloudflare.PagesProject(
-    "frontend-ui",
-    account_id=cloudflare_account_id,
-    name="saas-website-builder-frontend",
-    source=cloudflare.PagesProjectSourceArgs(
-        type="github",
-        config=cloudflare.PagesProjectSourceConfigArgs(
-            owner="your-github-username",
-            repo_name="your-frontend-repo",
-            production_branch="main",
-        ),
-    ),
-    deployment_configs=cloudflare.PagesProjectDeploymentConfigsArgs(
-        production=cloudflare.PagesProjectDeploymentConfigsProductionArgs(
-            environment_variables={
-                "NEXT_PUBLIC_BACKEND_API_URL": python_backend_service.uri,
-                "NEXT_PUBLIC_KEYCLOAK_AUTH_URL": keycloak_service.uri,
-            }
-        )
-    ),
-)
-
-# EXPORT RE-LOCATED ENDPOINTS
-pulumi.export("cloudflare_frontend_url", frontend_app.subdomain)
 pulumi.export("gcp_backend_url", python_backend_service.uri)
 pulumi.export("gcp_keycloak_url", keycloak_service.uri)
-pulumi.export("european_artifact_registry_url", siteflow_registry.name)
+pulumi.export("artifact_registry_url", siteflow_registry.name)
