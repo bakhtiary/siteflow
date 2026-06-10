@@ -3,14 +3,16 @@ import pulumi
 import pulumi_docker as docker
 import pulumi_gcp as gcp
 
+from github_actions import create_github_actions_identity
 from keycloak import create_keycloak_service
 
-# Initialize Pulumi Configuration
 config = pulumi.Config()
 
 neon_database_url = config.require_secret("neonDatabaseUrl")
 
 REGION = "europe-west3"
+
+create_github_actions_identity(config)
 
 siteflow_registry = gcp.artifactregistry.Repository(
     "siteflow-registry",
