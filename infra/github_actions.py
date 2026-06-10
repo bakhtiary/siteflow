@@ -15,7 +15,7 @@ def create_github_actions_identity(
     config: pulumi.Config,
 ) -> GithubActionsIdentity:
     project = pulumi.Config("gcp").require("project")
-    github_repository = config.get("githubRepository") or "YOUR_GITHUB_ORG/siteflow-pro"
+    github_repository = config.require("githubRepository")
 
     service_account = gcp.serviceaccount.Account(
         "github-actions-deployer",
