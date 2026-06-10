@@ -17,12 +17,20 @@ def create_github_actions_identity(
     project = pulumi.Config("gcp").require("project")
     github_repository = config.require("githubRepository")
 
+    iam_credentials_api = gcp.projects.Service(
+        "iam-credentials-api",
+        project=project,
+        service="iamcredentials.googleapis.com",
+        disable_on_destroy=False,
+    )
+
     service_account = gcp.serviceaccount.Account(
         "github-actions-deployer",
         account_id="github-actions",
         display_name="GitHub Actions deployer",
         description="Service account impersonated by GitHub Actions via Workload Identity Federation.",
         project=project,
+        opts=pulumi.ResourceOptions(depends_on=[iam_credentials_api]),
     )
 
     pool = gcp.iam.WorkloadIdentityPool(
@@ -31,6 +39,7 @@ def create_github_actions_identity(
         display_name="GitHub Actions Pool",
         description="Workload Identity Pool for GitHub Actions.",
         project=project,
+        opts=pulumi.ResourceOptions(depends_on=[iam_credentials_api]),
     )
 
     provider = gcp.iam.WorkloadIdentityPoolProvider(
