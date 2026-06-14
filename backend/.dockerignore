@@ -3,6 +3,7 @@
 .codex
 .idea
 .venv
+.uv-cache
 __pycache__/
 *.py[cod]
 *.pyo
@@ -14,6 +15,7 @@ htmlcov/
 dist/
 build/
 *.egg-info/
+*.db
 .env
 .env.*
 Dockerfile

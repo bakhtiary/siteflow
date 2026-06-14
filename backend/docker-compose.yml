@@ -1,0 +1,29 @@
+services:
+  api:
+    build: .
+    environment:
+      DATABASE_URL: postgresql://siteflow:siteflow@postgres:5432/siteflow
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: siteflow
+      POSTGRES_USER: siteflow
+      POSTGRES_PASSWORD: siteflow
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U siteflow -d siteflow"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres-data:
