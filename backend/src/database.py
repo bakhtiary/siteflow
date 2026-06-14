@@ -1,13 +1,12 @@
-import os
 from datetime import UTC, datetime
 from typing import Any
-from uuid import uuid4
+from urllib.parse import urlparse
 
 import psycopg
 from psycopg.rows import dict_row
 
-
-DATABASE_URL = os.environ["DATABASE_URL"]
+from src.database_config import DATABASE_URL
+from src.queue import clone_website
 
 
 def _is_postgres(database_url: str | None = None) -> bool:
@@ -30,82 +29,120 @@ def init_db() -> None:
     with get_connection() as connection:
         statements = (
             """
-            CREATE TABLE IF NOT EXISTS clone_jobs (
+            CREATE TABLE IF NOT EXISTS websites (
                 id BIGSERIAL PRIMARY KEY,
-                handle TEXT NOT NULL UNIQUE,
-                url TEXT NOT NULL,
-                status TEXT NOT NULL,
-                created_at TIMESTAMPTZ NOT NULL
+                name TEXT NOT NULL,
+                start_time TIMESTAMPTZ NOT NULL,
+                last_access_time TIMESTAMPTZ NOT NULL,
+                user_id BIGINT
             )
             """,
             """
-            CREATE TABLE IF NOT EXISTS clone_job_cookies (
-                id BIGSERIAL PRIMARY KEY,
-                clone_job_id BIGINT NOT NULL
-                    REFERENCES clone_jobs (id)
-                    ON DELETE CASCADE,
-                cookie TEXT,
-                created_at TIMESTAMPTZ NOT NULL
-            )
+            ALTER TABLE websites
+            ADD COLUMN IF NOT EXISTS last_access_time TIMESTAMPTZ
             """,
-            "CREATE INDEX IF NOT EXISTS idx_clone_jobs_handle ON clone_jobs (handle)",
             """
-            CREATE INDEX IF NOT EXISTS idx_clone_job_cookies_clone_job_id
-                ON clone_job_cookies (clone_job_id)
+            UPDATE websites
+            SET last_access_time = start_time
+            WHERE last_access_time IS NULL
             """,
+            """
+            ALTER TABLE websites
+            ALTER COLUMN last_access_time SET NOT NULL
+            """,
+            "DROP TABLE IF EXISTS clone_job_cookies",
+            "DROP TABLE IF EXISTS clone_jobs",
         )
         for statement in statements:
             connection.execute(statement)
         connection.commit()
 
 
+def _website_name_from_url(url: str) -> str:
+    parsed_url = urlparse(url)
+    return parsed_url.netloc or parsed_url.path or url
+
+
 def create_clone_job(url: str, cookie: str | None) -> dict[str, Any]:
-    handle = uuid4().hex
     created_at = datetime.now(UTC)
+    website_name = _website_name_from_url(url)
 
     with get_connection() as connection:
-        cursor = execute(
+        website_cursor = execute(
             connection,
             """
-            INSERT INTO clone_jobs (handle, url, status, created_at)
+            INSERT INTO websites (name, start_time, last_access_time, user_id)
             VALUES (%s, %s, %s, %s)
             RETURNING id
             """,
-            (handle, url, "queued", created_at),
+            (website_name, created_at, created_at, None),
         )
-        clone_job_id = cursor.fetchone()["id"]
+        website_id = website_cursor.fetchone()["id"]
 
-        execute(
-            connection,
-            "INSERT INTO clone_job_cookies (clone_job_id, cookie, created_at) VALUES (%s, %s, %s)",
-            (clone_job_id, cookie, created_at),
+        job_id = clone_website.configure(connection=connection).defer(
+            website_id=website_id,
+            main_url=url,
+            cookie=cookie,
         )
         connection.commit()
 
     return {
-        "handle": handle,
-        "url": url,
-        "status": "queued",
+        "job_id": job_id,
+        "main_url": url,
+        "status": "todo",
         "created_at": created_at,
+        "website": {
+            "website_id": website_id,
+            "website_name": website_name,
+            "start_time": created_at,
+            "last_access_time": created_at,
+            "user_id": None,
+        },
     }
 
 
-def get_clone_job(handle: str) -> dict[str, Any] | None:
+def get_clone_job(job_id: int) -> dict[str, Any] | None:
     with get_connection() as connection:
         row = execute(
             connection,
             """
-            SELECT handle, url, status, created_at
-            FROM clone_jobs
-            WHERE handle = %s
+            SELECT
+                procrastinate_jobs.id AS job_id,
+                procrastinate_jobs.args->>'main_url' AS main_url,
+                procrastinate_jobs.status,
+                COALESCE(procrastinate_events.at, websites.start_time) AS created_at,
+                websites.id AS website_id,
+                websites.name AS website_name,
+                websites.start_time,
+                websites.last_access_time,
+                websites.user_id
+            FROM procrastinate_jobs
+            JOIN websites
+                ON websites.id = (procrastinate_jobs.args->>'website_id')::BIGINT
+            LEFT JOIN procrastinate_events
+                ON procrastinate_events.job_id = procrastinate_jobs.id
+                AND procrastinate_events.type = 'deferred'
+            WHERE procrastinate_jobs.id = %s
             """,
-            (handle,),
+            (job_id,),
         ).fetchone()
 
     if row is None:
         return None
 
-    return dict(row)
+    return {
+        "job_id": row["job_id"],
+        "main_url": row["main_url"],
+        "status": row["status"],
+        "created_at": row["created_at"],
+        "website": {
+            "website_id": row["website_id"],
+            "website_name": row["website_name"],
+            "start_time": row["start_time"],
+            "last_access_time": row["last_access_time"],
+            "user_id": row["user_id"],
+        },
+    }
 
 
 if __name__ == "__main__":

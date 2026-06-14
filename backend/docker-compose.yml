@@ -3,11 +3,26 @@ services:
     build: .
     environment:
       DATABASE_URL: postgresql://siteflow:siteflow@postgres:5432/siteflow
+      WEBSITE_OUTPUT_DIR: /app/websites
     ports:
       - "8000:8000"
     depends_on:
       postgres:
         condition: service_healthy
+    volumes:
+      - website-data:/app/websites
+
+  worker:
+    build: .
+    command: ["uv", "run", "python", "-m", "src.worker"]
+    environment:
+      DATABASE_URL: postgresql://siteflow:siteflow@postgres:5432/siteflow
+      WEBSITE_OUTPUT_DIR: /app/websites
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - website-data:/app/websites
 
   postgres:
     image: postgres:17-alpine
@@ -27,3 +42,4 @@ services:
 
 volumes:
   postgres-data:
+  website-data:
