@@ -1,0 +1,56 @@
+services:
+  frontend:
+    image: nginx:1.27-alpine
+    ports:
+      - "8080:80"
+    volumes:
+      - ./frontend/dist:/usr/share/nginx/html:ro
+      - ./frontend/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - api
+
+  api:
+    build: ./backend
+    environment:
+      DATABASE_URL: postgresql://siteflow:siteflow@postgres:5432/siteflow
+      WEBSITE_STORAGE_BACKEND: local
+      WEBSITE_OUTPUT_DIR: /app/websites
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./website-data:/app/websites
+
+  worker:
+    build: ./backend
+    command: ["uv", "run", "python", "-m", "src.worker"]
+    environment:
+      DATABASE_URL: postgresql://siteflow:siteflow@postgres:5432/siteflow
+      WEBSITE_STORAGE_BACKEND: local
+      WEBSITE_OUTPUT_DIR: /app/websites
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./website-data:/app/websites
+
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: siteflow
+      POSTGRES_USER: siteflow
+      POSTGRES_PASSWORD: siteflow
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U siteflow -d siteflow"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres-data:

@@ -10,6 +10,7 @@ from src.database import init_db
 from src.model import CloneJobCreate, CloneJobResponse
 from src.queue import app as queue_app
 from src.queue import open_queue
+from src.storage import get_website_storage
 
 
 @asynccontextmanager
@@ -56,3 +57,13 @@ def get_clone_job(job_id: int) -> CloneJobResponse:
         else datetime.fromisoformat(clone_job["created_at"]),
         website=clone_job["website"],
     )
+
+
+@app.get("/view/{website_id}")
+def view_website(website_id: int) -> Response:
+    stored_file = get_website_storage().read_file(website_id, "index.html")
+
+    if stored_file is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Website output not found")
+
+    return Response(content=stored_file.content, media_type=stored_file.content_type)

@@ -24,9 +24,14 @@
   input[type=text]{flex:1;border:none;outline:none;padding:17px 18px;font-family:'Geist Mono',monospace;font-size:13px;color:#1a1814;background:transparent}
   input[type=text]::placeholder{color:#c8c0b4}
   .btn{padding:15px 28px;background:#1a1814;border:none;font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:#faf8f4;cursor:pointer;transition:background 0.15s;white-space:nowrap}
+  .btn:disabled{cursor:not-allowed;opacity:0.7}
   .btn:hover{background:#3a342c}
   .btn:active{transform:scale(0.98)}
   .hint{font-size:10px;color:#b0a090;letter-spacing:0.08em}
+  .action-bar{display:none;align-items:center;gap:10px;margin-top:20px;padding:12px;background:#fff;border:1.5px solid #e8e0d4;border-radius:10px}
+  .action-bar.is-visible{display:flex}
+  .action-link{flex:1;text-align:center;text-decoration:none;padding:12px 14px;background:#faf8f4;border:1px solid #e8e0d4;border-radius:7px;font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:#1a1814;transition:border-color 0.15s,background 0.15s}
+  .action-link:hover{background:#fff8f4;border-color:#f0cdb8}
   .stats{display:flex;gap:40px;margin-top:56px;padding-top:40px;border-top:1px solid #e8e0d4}
   .stat-num{font-family:'Fraunces',serif;font-size:36px;font-weight:300;color:#1a1814;letter-spacing:-0.03em;line-height:1}
   .stat-label{font-size:10px;color:#9a9080;letter-spacing:0.12em;text-transform:uppercase;margin-top:4px}
@@ -56,7 +61,7 @@
   .hint{animation-delay:0.22s}
   .stats{animation-delay:0.28s}
   .right-col{animation-delay:0.32s}
-  @media(max-width:580px){.topbar .nav{display:none}.card-body{grid-template-columns:1fr 1fr}.stats{gap:24px}}
+  @media(max-width:580px){.topbar .nav{display:none}.card-body{grid-template-columns:1fr 1fr}.stats{gap:24px}.input-wrap,.action-bar{flex-direction:column}.prefix,.btn,.action-link{width:100%}.prefix{justify-content:center;padding:12px 16px;border-right:none;border-bottom:1.5px solid #e8e0d4}}
 </style>
 </head>
 <body>
@@ -80,6 +85,11 @@
     <button class="btn" onclick="handleClone()">Clone it</button>
   </div>
   <p class="hint" id="hintText">Try: stripe.com, linear.app, vercel.com</p>
+  <div class="action-bar" id="actionBar" aria-live="polite">
+    <a class="action-link" id="controlPanelLink" target="_blank" rel="noopener noreferrer">Control panel</a>
+    <a class="action-link" id="liveEditLink" target="_blank" rel="noopener noreferrer">Live edit</a>
+    <a class="action-link" id="viewLink" target="_blank" rel="noopener noreferrer">View</a>
+  </div>
 
   <div class="stats">
     <div>
@@ -145,24 +155,71 @@
 </div>
 
 <script>
-function handleClone(){
+function buildCloneUrl(value){
+  return /^https?:\/\//i.test(value) ? value : `https://${value}`;
+}
+
+function setActionLinks(websiteId){
+  const actionBar = document.getElementById('actionBar');
+  const links = [
+    ['controlPanelLink', `/api/cp/${websiteId}`],
+    ['liveEditLink', `/api/edit/${websiteId}`],
+    ['viewLink', `/api/view/${websiteId}`],
+  ];
+
+  links.forEach(([id, href]) => {
+    document.getElementById(id).href = href;
+  });
+  actionBar.classList.add('is-visible');
+}
+
+async function handleClone(){
   const val = document.getElementById('urlInput').value.trim();
   const btn = document.querySelector('.btn');
   const hint = document.getElementById('hintText');
   const cardUrl = document.getElementById('cardUrl');
   if(!val){document.getElementById('urlInput').focus();return}
+  const url = buildCloneUrl(val);
   btn.textContent = 'Cloning...';
   btn.style.background = '#c05c28';
-  hint.textContent = 'Reconstructing layout...';
-  const display = val.replace(/^https?:\/\//,'');
-  setTimeout(()=>{
+  btn.disabled = true;
+  hint.textContent = 'Creating clone job...';
+  hint.style.color = '';
+  document.getElementById('actionBar').classList.remove('is-visible');
+
+  try {
+    const response = await fetch('/api/clone', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({url}),
+    });
+
+    if(!response.ok){
+      throw new Error(`Clone request failed with status ${response.status}`);
+    }
+
+    const job = await response.json();
+    const websiteId = job.website && job.website.website_id;
+
+    if(!websiteId){
+      throw new Error('Clone response did not include a website id');
+    }
+
+    const display = url.replace(/^https?:\/\//,'');
     cardUrl.textContent = display;
-    hint.textContent = '✓ Done — your clone is ready to edit';
+    hint.textContent = 'Done - your clone job is ready';
     hint.style.color = '#c05c28';
+    setActionLinks(websiteId);
+    document.getElementById('urlInput').value = '';
+  } catch (error) {
+    hint.textContent = 'Could not create clone job. Check the URL and try again.';
+    hint.style.color = '#c05c28';
+    console.error(error);
+  } finally {
     btn.textContent = 'Clone it';
     btn.style.background = '';
-    document.getElementById('urlInput').value = '';
-  }, 2000);
+    btn.disabled = false;
+  }
 }
 document.getElementById('urlInput').addEventListener('keydown',e=>{if(e.key==='Enter')handleClone()});
 </script>
