@@ -1,3 +1,4 @@
 name: siteflow
 runtime:
   name: python
+stackConfigDir: config
