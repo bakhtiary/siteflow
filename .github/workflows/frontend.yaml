@@ -10,18 +10,12 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      deployments: write
-
+    timeout-minutes: 60
     steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Deploy root Cloudflare project
+      - uses: actions/checkout@v6
+      - name: Build & Deploy Worker
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: frontend
-          command: deploy
