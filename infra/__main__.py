@@ -3,6 +3,7 @@ import pulumi
 import pulumi_gcp as gcp
 
 from backend import create_backend_service
+from create_placeholder_docker_image import create_placeholder_docker_image
 from github_actions import create_github_actions_identity
 from keycloak import create_keycloak_service
 
@@ -37,11 +38,13 @@ keycloak_service = create_keycloak_service(
     neon_database_url,
 )
 
+placeholder_docker_image = create_placeholder_docker_image(siteflow_registry)
+
 create_backend_service(
-    siteflow_registry,
     REGION,
     neon_database_url,
     keycloak_service.uri,
+    placeholder_docker_image.image_name,
 )
 pulumi.export("artifact_registry_url", siteflow_registry.name)
 pulumi.export("website_info_bucket_name", website_info_bucket.name)
