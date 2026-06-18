@@ -24,7 +24,7 @@ siteflow_registry = gcp.artifactregistry.Repository(
 
 website_info_bucket = gcp.storage.Bucket(
     "website-info-bucket",
-    name="website-info",
+    name="siteflow-website-info",
     location=REGION.upper(),
     uniform_bucket_level_access=True,
     public_access_prevention="enforced",
