@@ -60,8 +60,17 @@ def get_clone_job(job_id: int) -> CloneJobResponse:
 
 
 @app.get("/view/{website_id}")
-def view_website(website_id: int) -> Response:
-    stored_file = get_website_storage().read_file(website_id, "index.html")
+@app.get("/view/{website_id}/{file_path:path}")
+def view_website(website_id: int, file_path: str = "index.html") -> Response:
+    requested_path = file_path
+
+    if requested_path.endswith("/"):
+        requested_path = f"{requested_path}index.html"
+
+    try:
+        stored_file = get_website_storage().read_file(website_id, f"frontend/{requested_path}")
+    except ValueError:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Website output not found")
 
     if stored_file is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Website output not found")

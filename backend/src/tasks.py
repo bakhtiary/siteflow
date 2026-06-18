@@ -17,14 +17,6 @@ def _content_type_from_response(response: urllib.response.addinfourl) -> str:
     return guessed_type or "application/octet-stream"
 
 
-def _output_filename(content_type: str) -> str:
-    if content_type == "text/html":
-        return "index.html"
-
-    extension = mimetypes.guess_extension(content_type) or ".bin"
-    return f"source{extension}"
-
-
 def clone_website_to_file(website_id: int, main_url: str, cookie: str | None = None) -> str:
     headers = {"User-Agent": "siteflow-worker/0.1"}
     if cookie is not None:
@@ -37,7 +29,7 @@ def clone_website_to_file(website_id: int, main_url: str, cookie: str | None = N
 
     output_uri = get_website_storage().save_file(
         website_id=website_id,
-        filename=_output_filename(content_type),
+        filename="frontend/index.html",
         content=content,
         content_type=content_type,
     )
