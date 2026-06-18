@@ -76,3 +76,7 @@ def view_website(website_id: int, file_path: str = "index.html") -> Response:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Website output not found")
 
     return Response(content=stored_file.content, media_type=stored_file.content_type)
+
+@app.get("/health")
+def health():
+    return {"status": "ok"}
