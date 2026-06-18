@@ -1,10 +1,3 @@
-function normalizeBackendOrigin(origin) {
-  if (!origin) {
-    throw new Error("BACKEND_ORIGIN is not configured");
-  }
-
-  return origin.replace(/\/+$/, "");
-}
 
 function isApiRequest(pathname) {
   return pathname === "/api" || pathname.startsWith("/api/");
@@ -12,10 +5,8 @@ function isApiRequest(pathname) {
 
 function buildBackendRequest(request, backendOrigin) {
   const incomingUrl = new URL(request.url);
-  const backendUrl = new URL(normalizeBackendOrigin(backendOrigin));
-  const backendPath = incomingUrl.pathname.replace(/^\/api\/?/, "/");
-
-  backendUrl.pathname = backendPath;
+  const backendUrl = new URL(backendOrigin);
+  backendUrl.pathname = incomingUrl.pathname.replace(/^\/api\/?/, "/");
   backendUrl.search = incomingUrl.search;
 
   const headers = new Headers(request.headers);
@@ -42,7 +33,7 @@ export default {
 
     if (isApiRequest(url.pathname)) {
       try {
-        return fetch(buildBackendRequest(request, env.BACKEND_ORIGIN));
+        return fetch(buildBackendRequest(request, "https://python-backend-1e8a6a6-539481263477.europe-west3.run.app"));
       } catch (error) {
         return new Response(error.message, { status: 500 });
       }
