@@ -6,7 +6,7 @@ def create_backend_service(
     region: str,
     database_url: pulumi.Output[str],
     keycloak_url: pulumi.Output[str],
-    placeholder_image_name: pulumi.Output[str],
+    image_url: pulumi.Input[str],
 ) -> gcp.cloudrunv2.Service:
     backend_service = gcp.cloudrunv2.Service(
         "python-backend",
@@ -15,7 +15,7 @@ def create_backend_service(
             timeout="1200s",
             containers=[
                 gcp.cloudrunv2.ServiceTemplateContainerArgs(
-                    image=placeholder_image_name,
+                    image=image_url,
                     envs=[
                         gcp.cloudrunv2.ServiceTemplateContainerEnvArgs(
                             name="DATABASE_URL", value=database_url

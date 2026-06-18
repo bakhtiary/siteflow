@@ -38,13 +38,16 @@ keycloak_service = create_keycloak_service(
     neon_database_url,
 )
 
-placeholder_docker_image = create_placeholder_docker_image(siteflow_registry)
+backend_image_url = config.get("backendImageUrl")
+if backend_image_url is None:
+    placeholder_docker_image = create_placeholder_docker_image(siteflow_registry)
+    backend_image_url = placeholder_docker_image.image_name
 
 create_backend_service(
     REGION,
     neon_database_url,
     keycloak_service.uri,
-    placeholder_docker_image.image_name,
+    backend_image_url,
 )
 pulumi.export("artifact_registry_url", siteflow_registry.name)
 pulumi.export("website_info_bucket_name", website_info_bucket.name)
