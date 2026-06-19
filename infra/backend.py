@@ -27,6 +27,9 @@ def create_backend_service(
                     resources=gcp.cloudrunv2.ServiceTemplateContainerResourcesArgs(
                         limits={"cpu": "2", "memory": "4Gi"}
                     ),
+                    ports=gcp.cloudrunv2.ServiceTemplateContainerPortsArgs(
+                        container_port=8000
+                    ),
                 )
             ],
         ),
