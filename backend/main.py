@@ -77,6 +77,6 @@ def view_website(website_id: int, file_path: str = "index.html") -> Response:
 
     return Response(content=stored_file.content, media_type=stored_file.content_type)
 
-@app.get("/health")
+@app.get("/")
 def health():
     return {"status": "ok"}
