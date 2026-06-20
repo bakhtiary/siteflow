@@ -23,6 +23,12 @@ def create_github_actions_identity(
         service="iamcredentials.googleapis.com",
         disable_on_destroy=False,
     )
+    cloud_resource_manager_api = gcp.projects.Service(
+        "cloud-resource-manager-api",
+        project=project,
+        service="cloudresourcemanager.googleapis.com",
+        disable_on_destroy=False,
+    )
 
     service_account = gcp.serviceaccount.Account(
         "github-actions-deployer",
@@ -58,11 +64,13 @@ def create_github_actions_identity(
         project=project,
     )
 
-    project_info = gcp.organizations.get_project_output(project_id=project)
-    github_principal = project_info.number.apply(
-        lambda project_number: (
+    project_number = cloud_resource_manager_api.id.apply(
+        lambda _: gcp.organizations.get_project(project_id=project).number
+    )
+    github_principal = project_number.apply(
+        lambda number: (
             "principalSet://iam.googleapis.com/"
-            f"projects/{project_number}/locations/global/"
+            f"projects/{number}/locations/global/"
             "workloadIdentityPools/github-pool/"
             f"attribute.repository/{github_repository}"
         )
