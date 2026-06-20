@@ -89,6 +89,13 @@ def create_github_actions_identity(
             member=deployer_member,
         )
 
+    gcp.storage.BucketIAMMember(
+        "github-actions-pulumi-state-object-admin",
+        bucket="siteflow-pulumi-state",
+        role="roles/storage.objectAdmin",
+        member=deployer_member,
+    )
+
     pulumi.export("github_actions_service_account_email", service_account.email)
     pulumi.export("github_actions_workload_identity_provider", provider.name)
 
