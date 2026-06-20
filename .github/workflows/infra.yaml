@@ -28,7 +28,7 @@ jobs:
           token: ${{ secrets.SITEFLOW_CONFIG_RW_PAT }}
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@v8
+        uses: astral-sh/setup-uv@v7
 
       - name: Set up Pulumi
         run: |
