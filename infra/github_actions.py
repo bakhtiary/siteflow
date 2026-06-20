@@ -77,9 +77,14 @@ def create_github_actions_identity(
 
     deployer_member = service_account.email.apply(lambda email: f"serviceAccount:{email}")
     for role in [
-        "roles/artifactregistry.writer",
+        "roles/artifactregistry.admin",
+        "roles/iam.serviceAccountAdmin",
         "roles/iam.serviceAccountUser",
+        "roles/iam.workloadIdentityPoolAdmin",
+        "roles/resourcemanager.projectIamAdmin",
         "roles/run.admin",
+        "roles/serviceusage.serviceUsageAdmin",
+        "roles/storage.admin",
     ]:
         resource_name = role.split("/")[-1].replace(".", "-").lower()
         gcp.projects.IAMMember(

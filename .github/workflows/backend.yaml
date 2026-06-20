@@ -2,9 +2,10 @@ name: Backend Docker Image CI
 
 on:
   push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/backend.yaml'
 
 env:
   IMAGE_REPOSITORY: europe-west3-docker.pkg.dev/siteflow-498414/siteflow/siteflow-backend

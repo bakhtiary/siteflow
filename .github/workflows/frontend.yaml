@@ -1,11 +1,11 @@
-# .github/workflows/deploy-cloudflare.yml
 name: Deploy Cloudflare
 
 on:
   push:
-    branches:
-      - main
-  workflow_dispatch:
+    branches: ["main"]
+    paths:
+      - 'backend/**'
+      - '.github/workflows/frontend.yaml'
 
 jobs:
   deploy:

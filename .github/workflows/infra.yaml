@@ -1,0 +1,77 @@
+name: Pulumi Infra
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "infra/**"
+      - ".github/workflows/infra.yaml"
+  workflow_dispatch:
+
+env:
+  GCP_PROJECT_ID: siteflow-498414
+  GCP_REGION: europe-west3
+  PULUMI_STACK: pro
+  PULUMI_BACKEND_URL: file://${{ github.workspace }}/infra/config/.pulumi-state
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v6
+
+      - name: Set up Pulumi
+        run: |
+          curl -fsSL https://get.pulumi.com | sh
+          echo "$HOME/.pulumi/bin" >> "$GITHUB_PATH"
+
+      - name: Install infra dependencies
+        working-directory: infra
+        run: uv sync --frozen
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: projects/539481263477/locations/global/workloadIdentityPools/github-pool/providers/github-provider
+          service_account: github-actions@siteflow-498414.iam.gserviceaccount.com
+          project_id: ${{ env.GCP_PROJECT_ID }}
+
+      - name: Set up Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker ${{ env.GCP_REGION }}-docker.pkg.dev --quiet
+
+      - name: Log in to Pulumi file backend
+        run: pulumi login "${PULUMI_BACKEND_URL}"
+
+      - name: Select Pulumi stack
+        working-directory: infra
+        run: pulumi stack select "${PULUMI_STACK}"
+        env:
+          PULUMI_CONFIG_PASSPHRASE: ${{ secrets.PULUMI_CONFIG_PASSPHRASE }}
+
+      - name: Pulumi up
+        working-directory: infra
+        run: pulumi up --yes
+        env:
+          PULUMI_CONFIG_PASSPHRASE: ${{ secrets.PULUMI_CONFIG_PASSPHRASE }}
+
+      - name: Upload Pulumi state artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pulumi-state-${{ github.run_id }}
+          path: infra/config/.pulumi-state
+          if-no-files-found: error
+          include-hidden-files: true
+          retention-days: 14
