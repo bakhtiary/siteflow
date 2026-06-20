@@ -24,8 +24,16 @@ siteflow_registry = gcp.artifactregistry.Repository(
 )
 
 website_info_bucket = gcp.storage.Bucket(
-    "website-info-bucket",
+    "siteflow-website-info",
     name="siteflow-website-info",
+    location=REGION.upper(),
+    uniform_bucket_level_access=True,
+    public_access_prevention="enforced",
+)
+
+pulumi_state_bucket = gcp.storage.Bucket(
+    "siteflow-pulumi-state",
+    name="siteflow-pulumi-state",
     location=REGION.upper(),
     uniform_bucket_level_access=True,
     public_access_prevention="enforced",
@@ -49,5 +57,7 @@ create_backend_service(
     keycloak_service.uri,
     backend_image_url,
 )
+
+pulumi.export("pulumi_state_bucket", pulumi_state_bucket.name)
 pulumi.export("artifact_registry_url", siteflow_registry.name)
 pulumi.export("website_info_bucket_name", website_info_bucket.name)

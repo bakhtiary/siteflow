@@ -12,7 +12,7 @@ env:
   GCP_PROJECT_ID: siteflow-498414
   GCP_REGION: europe-west3
   PULUMI_STACK: pro
-  PULUMI_BACKEND_URL: file://${{ github.workspace }}/infra/config/.pulumi-state
+  PULUMI_BACKEND_URL: gs://siteflow-pulumi-state
 
 jobs:
   deploy:
