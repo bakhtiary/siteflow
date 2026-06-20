@@ -23,19 +23,6 @@ services:
     volumes:
       - ./website-data:/app/websites
 
-  worker:
-    build: ./backend
-    command: ["uv", "run", "python", "-m", "src.worker"]
-    environment:
-      DATABASE_URL: postgresql://siteflow:siteflow@postgres:5432/siteflow
-      WEBSITE_STORAGE_BACKEND: local
-      WEBSITE_OUTPUT_DIR: /app/websites
-    depends_on:
-      postgres:
-        condition: service_healthy
-    volumes:
-      - ./website-data:/app/websites
-
   postgres:
     image: postgres:17-alpine
     environment:

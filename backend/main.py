@@ -1,4 +1,6 @@
+import asyncio
 from contextlib import asynccontextmanager
+from contextlib import suppress
 from datetime import datetime
 from typing import Annotated
 
@@ -11,15 +13,28 @@ from src.model import CloneJobCreate, CloneJobResponse
 from src.queue import app as queue_app
 from src.queue import open_queue
 from src.storage import get_website_storage
+from src.worker_queue import app as worker_app
+
+
+async def run_worker() -> None:
+    async with worker_app.open_async():
+        await worker_app.run_worker_async(
+            queues=["clone"],
+            install_signal_handlers=False,
+        )
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     open_queue()
     init_db()
+    worker_task = asyncio.create_task(run_worker(), name="siteflow-worker")
     try:
         yield
     finally:
+        worker_task.cancel()
+        with suppress(asyncio.CancelledError):
+            await worker_task
         queue_app.close()
 
 
