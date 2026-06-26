@@ -5,6 +5,7 @@ import pulumi_gcp as gcp
 from backend import create_backend_service
 from create_placeholder_docker_image import create_placeholder_docker_image
 from github_actions import create_github_actions_identity
+from it_tools import create_it_tools_service
 from keycloak import create_keycloak_service
 
 config = pulumi.Config()
@@ -52,11 +53,17 @@ if backend_image_url is None:
     backend_image_url = placeholder_docker_image.image_name
 
 create_backend_service(
+    siteflow_registry,
     REGION,
     neon_database_url,
     keycloak_service.uri,
-    backend_image_url,
 )
+
+create_it_tools_service(
+    siteflow_registry,
+    REGION,
+)
+
 
 pulumi.export("pulumi_state_bucket", pulumi_state_bucket.name)
 pulumi.export("artifact_registry_url", siteflow_registry.name)
