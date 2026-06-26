@@ -33,7 +33,7 @@ def create_backend_service(
             timeout="1200s",
             containers=[
                 gcp.cloudrunv2.ServiceTemplateContainerArgs(
-                    image=image.image_name,
+                    image=image.repo_digest,
                     envs=[
                         gcp.cloudrunv2.ServiceTemplateContainerEnvArgs(
                             name="DATABASE_URL", value=database_url
