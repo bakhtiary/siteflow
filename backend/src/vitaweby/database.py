@@ -6,7 +6,7 @@ import psycopg
 from psycopg.rows import dict_row
 
 from vitaweby.database_config import DATABASE_URL
-from vitaweby.queue import clone_website
+from vitaweby.vita_queue import clone_website
 
 
 def _is_postgres(database_url: str | None = None) -> bool:

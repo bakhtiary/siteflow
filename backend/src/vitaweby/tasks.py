@@ -4,8 +4,8 @@ import urllib.request
 
 import psycopg
 
-from src.database_config import DATABASE_URL
-from src.storage import get_website_storage
+from vitaweby.database_config import DATABASE_URL
+from vitaweby.storage import get_website_storage
 
 
 def _content_type_from_response(response: urllib.response.addinfourl) -> str:

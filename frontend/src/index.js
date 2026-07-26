@@ -33,7 +33,7 @@ export default {
 
     if (isApiRequest(url.pathname)) {
       try {
-        return fetch(buildBackendRequest(request, "https://python-backend-1e8a6a6-539481263477.europe-west3.run.app"));
+        return fetch(buildBackendRequest(request, env.BACKEND_ORIGIN));
       } catch (error) {
         return new Response(error.message, { status: 500 });
       }
