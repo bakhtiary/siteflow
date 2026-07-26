@@ -6,14 +6,14 @@ from typing import Annotated
 
 from fastapi import FastAPI, Header, HTTPException, Response, status
 
-from src.database import create_clone_job as create_clone_job_record
-from src.database import get_clone_job as get_clone_job_record
-from src.database import init_db
-from src.model import CloneJobCreate, CloneJobResponse
-from src.queue import app as queue_app
-from src.queue import open_queue
-from src.storage import get_website_storage
-from src.worker_queue import app as worker_app
+from vitaweby.database import create_clone_job as create_clone_job_record
+from vitaweby.database import get_clone_job as get_clone_job_record
+from vitaweby.database import init_db
+from vitaweby.model import CloneJobCreate, CloneJobResponse
+from vitaweby.vita_queue import app as queue_app
+from vitaweby.vita_queue import open_queue
+from vitaweby.storage import get_website_storage
+from vitaweby.worker_queue import app as worker_app
 
 
 async def run_worker() -> None:

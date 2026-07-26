@@ -12,3 +12,7 @@ dependencies = [
     "scrapy-playwright>=0.0.48",
     "uvicorn[standard]>=0.30.0",
 ]
+
+[tool.setuptools]
+py-modules = ["vitaweby"]
+package-dir = {"" = "src"}
