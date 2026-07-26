@@ -1,3 +1,5 @@
+import time
+
 import psycopg
 import procrastinate
 
@@ -10,7 +12,19 @@ app = procrastinate.App(
 )
 
 
+def _wait_for_postgres(*, retries: int = 10, delay_seconds: float = 1.0) -> None:
+    for attempt in range(1, retries + 1):
+        try:
+            with psycopg.connect(DATABASE_URL):
+                return
+        except psycopg.OperationalError:
+            if attempt == retries:
+                raise
+            time.sleep(delay_seconds)
+
+
 def open_queue() -> None:
+    _wait_for_postgres()
     ensure_queue_schema()
     app.open()
 
