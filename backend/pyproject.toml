@@ -13,6 +13,12 @@ dependencies = [
     "uvicorn[standard]>=0.30.0",
 ]
 
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
 [tool.setuptools]
-py-modules = ["vitaweby"]
 package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
