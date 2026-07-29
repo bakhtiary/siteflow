@@ -8,8 +8,10 @@
   body{font-family:'Geist Mono',monospace;background:#faf8f4;color:#1a1814;min-height:100vh}
   .page{max-width:860px;margin:0 auto;padding:80px 32px}
   .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:96px}
-  .logo{font-family:'Fraunces',serif;font-size:17px;font-weight:300;color:#1a1814;letter-spacing:-0.01em}
-  .logo span{font-style:italic;color:#c05c28}
+  .logo{display:inline-flex;align-items:center;gap:10px;font-family:'Fraunces',serif;font-size:17px;font-weight:400;color:#1a1814;letter-spacing:0.05em;text-decoration:none}
+  .logo img{width:48px;height:48px;display:block;object-fit:contain;border-radius:8px}
+  .logo-vita{color:#d4a017}
+  .logo-weby{color:#0b2d4d}
   .nav{display:flex;gap:28px}
   .nav a{font-size:11px;letter-spacing:0.1em;color:#9a9080;text-decoration:none;text-transform:uppercase}
   .nav a:hover{color:#1a1814}
@@ -67,7 +69,10 @@
 <body>
 <div class="page">
   <div class="topbar">
-    <div class="logo">make<span>site</span></div>
+    <a class="logo" href="/" aria-label="VITAWEBY home">
+      <img src="/assets/image3.png" alt="" width="48" height="48">
+      <span><span class="logo-vita">VITA</span><span class="logo-weby">WEBY</span></span>
+    </a>
     <nav class="nav">
       <a href="#">Docs</a>
       <a href="#">Pricing</a>
