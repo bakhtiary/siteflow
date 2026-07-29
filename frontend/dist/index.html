@@ -2,54 +2,54 @@
 <html>
 <head>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;1,9..144,300;1,9..144,400&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
-  body{font-family:'Geist Mono',monospace;background:#faf8f4;color:#1a1814;min-height:100vh}
+  body{font-family:'Inter',sans-serif;background:#faf8f4;color:#1a1814;min-height:100vh;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
   .page{max-width:860px;margin:0 auto;padding:80px 32px}
   .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:96px}
-  .logo{display:inline-flex;align-items:center;gap:10px;font-family:'Fraunces',serif;font-size:17px;font-weight:400;color:#1a1814;letter-spacing:0.05em;text-decoration:none}
-  .logo img{width:48px;height:48px;display:block;object-fit:contain;border-radius:8px}
+  .logo{display:inline-flex;align-items:center;gap:12px;font-family:'Poppins',sans-serif;font-size:21px;font-weight:600;color:#1a1814;letter-spacing:0.03em;text-decoration:none;text-transform:uppercase}
+  .logo img{width:64px;height:64px;display:block;object-fit:contain;border-radius:10px}
   .logo-vita{color:#d4a017}
   .logo-weby{color:#0b2d4d}
   .nav{display:flex;gap:28px}
-  .nav a{font-size:11px;letter-spacing:0.1em;color:#9a9080;text-decoration:none;text-transform:uppercase}
+  .nav a{font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;letter-spacing:0.08em;color:#7f7669;text-decoration:none;text-transform:uppercase}
   .nav a:hover{color:#1a1814}
-  .badge{display:inline-flex;align-items:center;gap:8px;font-size:10px;letter-spacing:0.18em;text-transform:uppercase;color:#c05c28;border:1px solid #f0cdb8;background:#fff8f4;padding:6px 14px;border-radius:100px;margin-bottom:32px}
+  .badge{display:inline-flex;align-items:center;gap:8px;font-family:'Poppins',sans-serif;font-size:10px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:#c05c28;border:1px solid #f0cdb8;background:#fff8f4;padding:6px 14px;border-radius:100px;margin-bottom:32px}
   .badge::before{content:'';width:6px;height:6px;border-radius:50%;background:#c05c28}
-  h1{font-family:'Fraunces',serif;font-size:clamp(50px,7vw,82px);font-weight:300;line-height:1.05;letter-spacing:-0.03em;color:#1a1814;margin-bottom:28px}
-  h1 em{font-style:italic;color:#c05c28}
-  .subhead{font-size:12px;color:#7a7060;line-height:1.9;max-width:400px;margin-bottom:64px;letter-spacing:0.02em}
+  h1{font-family:'Poppins',sans-serif;font-size:clamp(50px,7vw,82px);font-weight:500;line-height:1.05;letter-spacing:-0.04em;color:#0b2d4d;margin-bottom:28px}
+  h1 em{font-style:normal;color:#d4a017}
+  .subhead{font-size:15px;font-weight:400;color:#665f55;line-height:1.75;max-width:520px;margin-bottom:56px;letter-spacing:0}
   .input-wrap{background:#fff;border:1.5px solid #e8e0d4;border-radius:10px;display:flex;overflow:hidden;margin-bottom:12px;transition:border-color 0.2s,box-shadow 0.2s}
   .input-wrap:focus-within{border-color:#c05c28;box-shadow:0 0 0 4px rgba(192,92,40,0.08)}
-  .prefix{padding:0 16px;font-size:11px;color:#b0a090;border-right:1.5px solid #e8e0d4;display:flex;align-items:center;background:#faf8f4;letter-spacing:0.06em;white-space:nowrap}
-  input[type=text]{flex:1;border:none;outline:none;padding:17px 18px;font-family:'Geist Mono',monospace;font-size:13px;color:#1a1814;background:transparent}
+  .prefix{padding:0 16px;font-size:12px;font-weight:500;color:#8d8172;border-right:1.5px solid #e8e0d4;display:flex;align-items:center;background:#faf8f4;letter-spacing:0.02em;white-space:nowrap}
+  input[type=text]{flex:1;border:none;outline:none;padding:17px 18px;font-family:'Inter',sans-serif;font-size:14px;color:#1a1814;background:transparent}
   input[type=text]::placeholder{color:#c8c0b4}
-  .btn{padding:15px 28px;background:#1a1814;border:none;font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:#faf8f4;cursor:pointer;transition:background 0.15s;white-space:nowrap}
+  .btn{padding:15px 28px;background:#1a1814;border:none;font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:#faf8f4;cursor:pointer;transition:background 0.15s;white-space:nowrap}
   .btn:disabled{cursor:not-allowed;opacity:0.7}
   .btn:hover{background:#3a342c}
   .btn:active{transform:scale(0.98)}
-  .hint{font-size:10px;color:#b0a090;letter-spacing:0.08em}
+  .hint{font-size:11px;color:#94897b;letter-spacing:0.02em}
   .action-bar{display:none;align-items:center;gap:10px;margin-top:20px;padding:12px;background:#fff;border:1.5px solid #e8e0d4;border-radius:10px}
   .action-bar.is-visible{display:flex}
-  .action-link{flex:1;text-align:center;text-decoration:none;padding:12px 14px;background:#faf8f4;border:1px solid #e8e0d4;border-radius:7px;font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:#1a1814;transition:border-color 0.15s,background 0.15s}
+  .action-link{flex:1;text-align:center;text-decoration:none;padding:12px 14px;background:#faf8f4;border:1px solid #e8e0d4;border-radius:7px;font-family:'Poppins',sans-serif;font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:#1a1814;transition:border-color 0.15s,background 0.15s}
   .action-link:hover{background:#fff8f4;border-color:#f0cdb8}
   .stats{display:flex;gap:40px;margin-top:56px;padding-top:40px;border-top:1px solid #e8e0d4}
-  .stat-num{font-family:'Fraunces',serif;font-size:36px;font-weight:300;color:#1a1814;letter-spacing:-0.03em;line-height:1}
-  .stat-label{font-size:10px;color:#9a9080;letter-spacing:0.12em;text-transform:uppercase;margin-top:4px}
+  .stat-num{font-family:'Poppins',sans-serif;font-size:34px;font-weight:600;color:#0b2d4d;letter-spacing:-0.04em;line-height:1}
+  .stat-label{font-family:'Poppins',sans-serif;font-size:10px;font-weight:500;color:#82796c;letter-spacing:0.09em;text-transform:uppercase;margin-top:6px}
   .right-col{position:relative;margin-top:96px;border-top:1px solid #e8e0d4;padding-top:48px}
-  .section-label{font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:#b0a090;margin-bottom:32px}
+  .section-label{font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:#82796c;margin-bottom:32px}
   .steps{display:flex;flex-direction:column;gap:0}
   .step{display:flex;gap:24px;padding:24px 0;border-bottom:1px solid #f0ebe2}
-  .step-num{font-family:'Fraunces',serif;font-size:22px;font-weight:300;color:#ddd4c4;width:32px;flex-shrink:0;line-height:1}
+  .step-num{font-family:'Poppins',sans-serif;font-size:22px;font-weight:600;color:#d4a017;width:32px;flex-shrink:0;line-height:1}
   .step-body{}
-  .step-title{font-size:13px;color:#1a1814;margin-bottom:4px;letter-spacing:0.02em}
-  .step-desc{font-size:11px;color:#9a9080;line-height:1.7;letter-spacing:0.02em}
+  .step-title{font-family:'Poppins',sans-serif;font-size:14px;font-weight:600;color:#0b2d4d;margin-bottom:6px;letter-spacing:0}
+  .step-desc{font-size:13px;color:#766e63;line-height:1.65;letter-spacing:0}
   .preview-card{margin-top:48px;background:#fff;border:1px solid #e8e0d4;border-radius:12px;overflow:hidden}
   .card-bar{background:#f4f0ea;padding:12px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #e8e0d4}
   .dots{display:flex;gap:6px}
   .dot{width:10px;height:10px;border-radius:50%}
-  .card-url{flex:1;background:#fff;border:1px solid #e0d8ce;border-radius:4px;padding:5px 12px;font-size:10px;color:#9a9080;letter-spacing:0.05em;text-align:center}
+  .card-url{flex:1;background:#fff;border:1px solid #e0d8ce;border-radius:4px;padding:5px 12px;font-size:11px;font-weight:500;color:#82796c;letter-spacing:0.02em;text-align:center}
   .card-body{padding:28px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
   .skel{border-radius:4px;background:#f4f0ea}
   .two-col{grid-column:span 2}
