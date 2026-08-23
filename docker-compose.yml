@@ -5,7 +5,8 @@ services:
       - "8080:80"
     volumes:
       - ./frontend/dist:/usr/share/nginx/html:ro
-      - ./frontend/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./frontend/nginx.conf.template:/etc/nginx/templates/default.conf.template:ro
+      - ./frontend/detect-api-upstream.envsh:/docker-entrypoint.d/10-detect-api-upstream.envsh:ro
     depends_on:
       - api
     networks:
