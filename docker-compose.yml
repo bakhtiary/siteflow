@@ -17,8 +17,6 @@ services:
       DATABASE_URL: postgresql://siteflow:siteflow@postgres:5432/siteflow
       WEBSITE_STORAGE_BACKEND: local
       WEBSITE_OUTPUT_DIR: /app/websites
-    ports:
-      - "8000:8000"
     depends_on:
       postgres:
         condition: service_healthy
