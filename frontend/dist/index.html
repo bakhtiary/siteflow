@@ -2,48 +2,50 @@
 <html>
 <head>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inclusive+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
+  :root{--font-brand:"Inclusive Sans","Helvetica Neue",Helvetica,Arial,sans-serif}
   *{margin:0;padding:0;box-sizing:border-box}
-  body{font-family:'Inter',sans-serif;background:#faf8f4;color:#1a1814;min-height:100vh;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+  body{font-family:var(--font-brand);background:#faf8f4;color:#1a1814;min-height:100vh;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
   .page{max-width:860px;margin:0 auto;padding:80px 32px}
   .topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:96px}
-  .logo{display:inline-flex;align-items:center;gap:12px;font-family:'Poppins',sans-serif;font-size:21px;font-weight:600;color:#1a1814;letter-spacing:0.03em;text-decoration:none;text-transform:uppercase}
-  .logo img{width:64px;height:64px;display:block;object-fit:contain;border-radius:10px}
-  .logo-vita{color:#d4a017}
-  .logo-weby{color:#0b2d4d}
+  .logo{display:inline-flex;align-items:center;text-decoration:none}
+  .logo img{width:220px;height:auto;display:block}
   .nav{display:flex;gap:28px}
-  .nav a{font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;letter-spacing:0.08em;color:#7f7669;text-decoration:none;text-transform:uppercase}
+  .nav a{font-family:var(--font-brand);font-size:11px;font-weight:600;letter-spacing:0.08em;color:#7f7669;text-decoration:none;text-transform:uppercase}
   .nav a:hover{color:#1a1814}
-  .badge{display:inline-flex;align-items:center;gap:8px;font-family:'Poppins',sans-serif;font-size:10px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:#c05c28;border:1px solid #f0cdb8;background:#fff8f4;padding:6px 14px;border-radius:100px;margin-bottom:32px}
+  .nav a.available{color:#665f55}
+  .nav a.available:hover{color:#0b2d4d}
+  .badge{display:inline-flex;align-items:center;gap:8px;font-family:var(--font-brand);font-size:10px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:#c05c28;border:1px solid #f0cdb8;background:#fff8f4;padding:6px 14px;border-radius:100px;margin-bottom:32px}
   .badge::before{content:'';width:6px;height:6px;border-radius:50%;background:#c05c28}
-  h1{font-family:'Poppins',sans-serif;font-size:clamp(50px,7vw,82px);font-weight:500;line-height:1.05;letter-spacing:-0.04em;color:#0b2d4d;margin-bottom:28px}
+  h1{font-family:var(--font-brand);font-size:clamp(50px,7vw,82px);font-weight:500;line-height:1.05;letter-spacing:-0.04em;color:#0b2d4d;margin-bottom:28px}
   h1 em{font-style:normal;color:#d4a017}
-  .subhead{font-size:15px;font-weight:400;color:#665f55;line-height:1.75;max-width:520px;margin-bottom:56px;letter-spacing:0}
+  .subhead{font-size:17px;font-weight:400;color:#665f55;line-height:1.7;max-width:600px;margin-bottom:56px;letter-spacing:0}
   .input-wrap{background:#fff;border:1.5px solid #e8e0d4;border-radius:10px;display:flex;overflow:hidden;margin-bottom:12px;transition:border-color 0.2s,box-shadow 0.2s}
   .input-wrap:focus-within{border-color:#c05c28;box-shadow:0 0 0 4px rgba(192,92,40,0.08)}
   .prefix{padding:0 16px;font-size:12px;font-weight:500;color:#8d8172;border-right:1.5px solid #e8e0d4;display:flex;align-items:center;background:#faf8f4;letter-spacing:0.02em;white-space:nowrap}
-  input[type=text]{flex:1;border:none;outline:none;padding:17px 18px;font-family:'Inter',sans-serif;font-size:14px;color:#1a1814;background:transparent}
+  input[type=text]{flex:1;border:none;outline:none;padding:17px 18px;font-family:var(--font-brand);font-size:14px;color:#1a1814;background:transparent}
   input[type=text]::placeholder{color:#c8c0b4}
-  .btn{padding:15px 28px;background:#1a1814;border:none;font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:#faf8f4;cursor:pointer;transition:background 0.15s;white-space:nowrap}
+  .btn{padding:15px 28px;background:#123db5;border:none;font-family:var(--font-brand);font-size:11px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:#faf8f4;cursor:pointer;transition:background 0.15s;white-space:nowrap}
   .btn:disabled{cursor:not-allowed;opacity:0.7}
-  .btn:hover{background:#3a342c}
+  .btn:hover{background:#0b2d4d}
   .btn:active{transform:scale(0.98)}
   .hint{font-size:11px;color:#94897b;letter-spacing:0.02em}
   .action-bar{display:none;align-items:center;gap:10px;margin-top:20px;padding:12px;background:#fff;border:1.5px solid #e8e0d4;border-radius:10px}
   .action-bar.is-visible{display:flex}
-  .action-link{flex:1;text-align:center;text-decoration:none;padding:12px 14px;background:#faf8f4;border:1px solid #e8e0d4;border-radius:7px;font-family:'Poppins',sans-serif;font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:#1a1814;transition:border-color 0.15s,background 0.15s}
+  .action-link{flex:1;text-align:center;text-decoration:none;padding:12px 14px;background:#faf8f4;border:1px solid #e8e0d4;border-radius:7px;font-family:var(--font-brand);font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:#1a1814;transition:border-color 0.15s,background 0.15s}
   .action-link:hover{background:#fff8f4;border-color:#f0cdb8}
   .stats{display:flex;gap:40px;margin-top:56px;padding-top:40px;border-top:1px solid #e8e0d4}
-  .stat-num{font-family:'Poppins',sans-serif;font-size:34px;font-weight:600;color:#0b2d4d;letter-spacing:-0.04em;line-height:1}
-  .stat-label{font-family:'Poppins',sans-serif;font-size:10px;font-weight:500;color:#82796c;letter-spacing:0.09em;text-transform:uppercase;margin-top:6px}
+  .stat-num{font-family:var(--font-brand);font-size:34px;font-weight:600;color:#0b2d4d;letter-spacing:-0.04em;line-height:1}
+  .stat-label{font-family:var(--font-brand);font-size:10px;font-weight:500;color:#82796c;letter-spacing:0.09em;text-transform:uppercase;margin-top:6px}
   .right-col{position:relative;margin-top:96px;border-top:1px solid #e8e0d4;padding-top:48px}
-  .section-label{font-family:'Poppins',sans-serif;font-size:11px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:#82796c;margin-bottom:32px}
+  .section-label{font-family:var(--font-brand);font-size:11px;font-weight:600;letter-spacing:0.14em;text-transform:uppercase;color:#82796c;margin-bottom:32px}
   .steps{display:flex;flex-direction:column;gap:0}
   .step{display:flex;gap:24px;padding:24px 0;border-bottom:1px solid #f0ebe2}
-  .step-num{font-family:'Poppins',sans-serif;font-size:22px;font-weight:600;color:#d4a017;width:32px;flex-shrink:0;line-height:1}
+  .step-num{font-family:var(--font-brand);font-size:22px;font-weight:600;color:#d4a017;width:32px;flex-shrink:0;line-height:1}
   .step-body{}
-  .step-title{font-family:'Poppins',sans-serif;font-size:14px;font-weight:600;color:#0b2d4d;margin-bottom:6px;letter-spacing:0}
+  .step-title{font-family:var(--font-brand);font-size:14px;font-weight:600;color:#0b2d4d;margin-bottom:6px;letter-spacing:0}
   .step-desc{font-size:13px;color:#766e63;line-height:1.65;letter-spacing:0}
   .preview-card{margin-top:48px;background:#fff;border:1px solid #e8e0d4;border-radius:12px;overflow:hidden}
   .card-bar{background:#f4f0ea;padding:12px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid #e8e0d4}
@@ -70,19 +72,18 @@
 <div class="page">
   <div class="topbar">
     <a class="logo" href="/" aria-label="VITAWEBY home">
-      <img src="/assets/image3.png" alt="" width="48" height="48">
-      <span><span class="logo-vita">VITA</span><span class="logo-weby">WEBY</span></span>
+      <img src="/assets/vitaweby-logo-v1-gold-blueberry-InclusiveSans-page-bg.png" alt="Vitaweby — Modernize. Visualize. Accelerate." width="220" height="124">
     </a>
     <nav class="nav">
-      <a href="#">Docs</a>
-      <a href="#">Pricing</a>
+      <a class="available" href="#">Docs</a>
+      <a class="available" href="#">Pricing</a>
       <a href="#">Log in</a>
     </nav>
   </div>
 
   <div class="badge">Now in public beta</div>
   <h1>Build sites<br>from <em>any</em> URL.</h1>
-  <p class="subhead">Paste a link to any website. We reverse-engineer the layout, copy, and structure — and hand it back to you, fully editable.</p>
+  <p class="subhead">Paste your website link. We recreate its layout, content, and structure, then give you a fully editable version.</p>
 
   <div class="input-wrap" id="inputWrap">
     <span class="prefix">https://</span>
