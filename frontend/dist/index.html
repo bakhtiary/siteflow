@@ -170,7 +170,7 @@ function setActionLinks(websiteId){
   const links = [
     ['controlPanelLink', `/api/cp/${websiteId}`],
     ['liveEditLink', `/api/edit/${websiteId}`],
-    ['viewLink', `/api/view/${websiteId}`],
+    ['viewLink', `/api/view/${websiteId}/`],
   ];
 
   links.forEach(([id, href]) => {

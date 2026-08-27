@@ -1,3 +1,4 @@
+import argparse
 import hashlib
 import json
 import os
@@ -63,18 +64,27 @@ def _srcset_urls(value: str) -> list[str]:
 class _WebsiteDownloadSpider(scrapy.Spider):
     name = "website_download"
 
-    def __init__(self, url: str, output_path: Path, *args, **kwargs) -> None:
+    def __init__(
+        self,
+        url: str,
+        output_path: Path,
+        cookie: str | None = None,
+        *args,
+        **kwargs,
+    ) -> None:
         super().__init__(*args, **kwargs)
         self.start_url = urldefrag(url)[0]
         self.root_host = urlsplit(url).hostname or ""
         self.output_root = output_path.parent
         self.home_path = output_path
         self.linked_pages: dict[str, Path] = {}
+        self.request_headers = {"Cookie": cookie} if cookie else {}
 
     async def start(self):
         yield scrapy.Request(
             self.start_url,
             callback=self.parse_page,
+            headers=self.request_headers,
             meta={"playwright": True, "is_home": True},
         )
 
@@ -158,6 +168,9 @@ class _WebsiteDownloadSpider(scrapy.Spider):
                     element.set(attribute, ", ".join(candidates))
                 else:
                     element.set(attribute, self._rewrite_url(value, response.url, destination, page=False))
+                # Localized stylesheets may be rewritten (for example, CSS url()
+                # references), so the origin server's SRI hash is no longer valid.
+                element.attrib.pop("integrity", None)
 
         css_nodes = document.xpath("//style | //*[@style]")
         for node in css_nodes:
@@ -213,7 +226,11 @@ class _WebsiteDownloadSpider(scrapy.Spider):
         return _CSS_IMPORT_RE.sub(replace_import, rewritten), discovered
 
 
-def scrape_and_download_website(url: str, output_path: str) -> str:
+def scrape_and_download_website(
+    url: str,
+    output_path: str,
+    cookie: str | None = None,
+) -> str:
     """Mirror one rendered page and the assets referenced by it."""
     settings = get_project_settings()
     settings.set("DOWNLOAD_HANDLERS", {
@@ -226,6 +243,27 @@ def scrape_and_download_website(url: str, output_path: str) -> str:
 
     destination = Path(output_path).resolve()
     process = CrawlerProcess(settings)
-    process.crawl(_WebsiteDownloadSpider, url=url, output_path=destination)
+    process.crawl(
+        _WebsiteDownloadSpider,
+        url=url,
+        output_path=destination,
+        cookie=cookie,
+    )
     process.start()
     return str(destination)
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Mirror one rendered web page")
+    parser.add_argument("url")
+    parser.add_argument("output_path")
+    args = parser.parse_args()
+    scrape_and_download_website(
+        args.url,
+        args.output_path,
+        cookie=os.getenv("SITEFLOW_SCRAPER_COOKIE"),
+    )
+
+
+if __name__ == "__main__":
+    main()

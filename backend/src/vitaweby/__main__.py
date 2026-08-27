@@ -79,7 +79,7 @@ def get_clone_job(job_id: int) -> CloneJobResponse:
 def view_website(website_id: int, file_path: str = "index.html") -> Response:
     requested_path = file_path
 
-    if requested_path.endswith("/"):
+    if not requested_path or requested_path.endswith("/"):
         requested_path = f"{requested_path}index.html"
 
     try:
