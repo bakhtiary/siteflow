@@ -1,4 +1,5 @@
 import hashlib
+import json
 import os
 import re
 from pathlib import Path, PurePosixPath
@@ -68,6 +69,7 @@ class _WebsiteDownloadSpider(scrapy.Spider):
         self.root_host = urlsplit(url).hostname or ""
         self.output_root = output_path.parent
         self.home_path = output_path
+        self.linked_pages: dict[str, Path] = {}
 
     async def start(self):
         yield scrapy.Request(
@@ -79,7 +81,7 @@ class _WebsiteDownloadSpider(scrapy.Spider):
     def _page_path(self, url: str) -> Path:
         if urldefrag(url)[0] == self.start_url:
             return self.home_path
-        return self.output_root / _url_path(url, self.root_host, page=True)
+        return self.output_root / "linked-pages" / _url_path(url, self.root_host, page=True)
 
     def _asset_path(self, url: str) -> Path:
         return self.output_root / _url_path(url, self.root_host, page=False)
@@ -96,6 +98,22 @@ class _WebsiteDownloadSpider(scrapy.Spider):
         target = self._page_path(absolute) if page else self._asset_path(absolute)
         return _relative_reference(source, target)
 
+    def _is_same_domain(self, url: str) -> bool:
+        hostname = (urlsplit(url).hostname or "").removeprefix("www.")
+        root_hostname = self.root_host.removeprefix("www.")
+        return hostname == root_hostname
+
+    def _write_link_manifest(self) -> None:
+        entries = [
+            {
+                "url": url,
+                "file": path.relative_to(self.output_root).as_posix(),
+            }
+            for url, path in sorted(self.linked_pages.items())
+        ]
+        manifest = self.output_root / "linked-pages.json"
+        self._write(manifest, (json.dumps(entries, indent=2) + "\n").encode())
+
     def parse_page(self, response: scrapy.http.Response):
         if response.meta.get("is_home"):
             # Treat the landing host as canonical when the supplied URL redirects
@@ -110,11 +128,16 @@ class _WebsiteDownloadSpider(scrapy.Spider):
         for element in document.xpath("//*[@href or @src or @srcset or @data or @poster]"):
             tag = element.tag.lower() if isinstance(element.tag, str) else ""
             if tag == "a" and element.get("href"):
-                # Keep navigation pointed at the live site. This mirror captures
-                # only the requested page rather than crawling linked pages.
-                absolute = _clean_url(element.get("href"), response.url)
-                if absolute:
-                    element.set("href", absolute)
+                value = element.get("href")
+                joined = urljoin(response.url, value)
+                absolute, fragment = urldefrag(joined)
+                if urlsplit(absolute).scheme in {"http", "https"} and self._is_same_domain(absolute):
+                    target = self._page_path(absolute)
+                    self.linked_pages.setdefault(absolute, target)
+                    local = _relative_reference(destination, target)
+                    element.set("href", f"{local}#{fragment}" if fragment else local)
+                elif urlsplit(absolute).scheme in {"http", "https"}:
+                    element.set("href", joined)
                 continue
 
             for attribute in _ASSET_ATTRIBUTES.get(tag, ()):
@@ -152,6 +175,7 @@ class _WebsiteDownloadSpider(scrapy.Spider):
 
         rendered = html.tostring(document, encoding="utf-8", method="html", doctype="<!DOCTYPE html>")
         self._write(destination, rendered)
+        self._write_link_manifest()
 
     def parse_asset(self, response: scrapy.http.Response):
         destination = self._asset_path(response.url)
