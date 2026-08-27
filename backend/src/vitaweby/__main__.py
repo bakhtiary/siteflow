@@ -5,6 +5,7 @@ from datetime import datetime
 from typing import Annotated
 
 from fastapi import FastAPI, Header, HTTPException, Response, status
+from fastapi.responses import RedirectResponse
 
 from vitaweby.database import create_clone_job as create_clone_job_record
 from vitaweby.database import get_clone_job as get_clone_job_record
@@ -74,9 +75,14 @@ def get_clone_job(job_id: int) -> CloneJobResponse:
     )
 
 
-@app.get("/view/{website_id}")
+@app.get("/view/{website_id}", include_in_schema=False)
+def redirect_to_website_root(website_id: int) -> RedirectResponse:
+    return RedirectResponse(url=f"{website_id}/", status_code=status.HTTP_307_TEMPORARY_REDIRECT)
+
+
+@app.get("/view/{website_id}/")
 @app.get("/view/{website_id}/{file_path:path}")
-def view_website(website_id: int, file_path: str = "index.html") -> Response:
+def view_website(website_id: int, file_path: str = "") -> Response:
     requested_path = file_path
 
     if not requested_path or requested_path.endswith("/"):
