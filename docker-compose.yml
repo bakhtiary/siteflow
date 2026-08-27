@@ -5,9 +5,12 @@ services:
       - "8080:80"
     volumes:
       - ./frontend/dist:/usr/share/nginx/html:ro
-      - ./frontend/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./frontend/nginx.conf.template:/etc/nginx/templates/default.conf.template:ro
+      - ./frontend/detect-api-upstream.envsh:/docker-entrypoint.d/10-detect-api-upstream.envsh:ro
     depends_on:
       - api
+    networks:
+      - siteflow
 
   api:
     build: ./backend
@@ -22,6 +25,8 @@ services:
         condition: service_healthy
     volumes:
       - ./website-data:/app/websites
+    networks:
+      - siteflow
 
   postgres:
     image: postgres:17-alpine
@@ -29,15 +34,22 @@ services:
       POSTGRES_DB: siteflow
       POSTGRES_USER: siteflow
       POSTGRES_PASSWORD: siteflow
+      PGDATA: /var/lib/postgresql/data/pgdata
     ports:
       - "5432:5432"
     volumes:
-      - postgres-data:/var/lib/postgresql/data
+      - vitaweby-postgres-data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U siteflow -d siteflow"]
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - siteflow
+
+networks:
+  siteflow:
+    driver: bridge
 
 volumes:
-  postgres-data:
+  vitaweby-postgres-data:

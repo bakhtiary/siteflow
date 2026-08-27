@@ -1,0 +1,6 @@
+if getent hosts api >/dev/null 2>&1; then
+    export API_UPSTREAM="api:8000"
+else
+    GATEWAY=$(awk '/^nameserver/{print $2; exit}' /etc/resolv.conf)
+    export API_UPSTREAM="${GATEWAY:-127.0.0.1}:8000"
+fi

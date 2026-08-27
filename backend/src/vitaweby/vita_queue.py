@@ -1,8 +1,10 @@
+import time
+
 import psycopg
 import procrastinate
 
-from src.database_config import DATABASE_URL
-from src.tasks import clone_website_to_file
+from vitaweby.database_config import DATABASE_URL
+from vitaweby.tasks import clone_website_to_file
 
 
 app = procrastinate.App(
@@ -10,7 +12,19 @@ app = procrastinate.App(
 )
 
 
+def _wait_for_postgres(*, retries: int = 10, delay_seconds: float = 1.0) -> None:
+    for attempt in range(1, retries + 1):
+        try:
+            with psycopg.connect(DATABASE_URL):
+                return
+        except psycopg.OperationalError:
+            if attempt == retries:
+                raise
+            time.sleep(delay_seconds)
+
+
 def open_queue() -> None:
+    _wait_for_postgres()
     ensure_queue_schema()
     app.open()
 

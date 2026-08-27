@@ -5,8 +5,8 @@ from urllib.parse import urlparse
 import psycopg
 from psycopg.rows import dict_row
 
-from src.database_config import DATABASE_URL
-from src.queue import clone_website
+from vitaweby.database_config import DATABASE_URL
+from vitaweby.vita_queue import clone_website
 
 
 def _is_postgres(database_url: str | None = None) -> bool:
