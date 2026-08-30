@@ -14,6 +14,17 @@ from vitaweby.storage import get_website_storage
 
 def clone_website_to_file(website_id: int, main_url: str, cookie: str | None = None) -> str:
     storage = get_website_storage()
+    with psycopg.connect(DATABASE_URL) as connection:
+        connection.execute(
+            """
+            UPDATE websites
+            SET download_total = 0, downloaded_items = 0
+            WHERE id = %s
+            """,
+            (website_id,),
+        )
+        connection.commit()
+
     with tempfile.TemporaryDirectory(prefix="siteflow-clone-") as temporary_dir:
         mirror_root = Path(temporary_dir) / "frontend"
         output_path = mirror_root / "index.html"
@@ -29,6 +40,8 @@ def clone_website_to_file(website_id: int, main_url: str, cookie: str | None = N
                 "vitaweby.scraper",
                 main_url,
                 str(output_path),
+                "--website-id",
+                str(website_id),
             ],
             env=environment,
             check=True,

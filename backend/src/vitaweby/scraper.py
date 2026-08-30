@@ -6,10 +6,13 @@ import re
 from pathlib import Path, PurePosixPath
 from urllib.parse import urldefrag, urljoin, urlsplit
 
+import psycopg
 import scrapy
 from lxml import html
 from scrapy.crawler import CrawlerProcess
 from scrapy.utils.project import get_project_settings
+
+from vitaweby.database_config import DATABASE_URL
 
 
 _ASSET_ATTRIBUTES = {
@@ -69,6 +72,7 @@ class _WebsiteDownloadSpider(scrapy.Spider):
         url: str,
         output_path: Path,
         cookie: str | None = None,
+        website_id: int | None = None,
         *args,
         **kwargs,
     ) -> None:
@@ -79,6 +83,35 @@ class _WebsiteDownloadSpider(scrapy.Spider):
         self.home_path = output_path
         self.linked_pages: dict[str, Path] = {}
         self.request_headers = {"Cookie": cookie} if cookie else {}
+        self.website_id = website_id
+        self.discovered_assets: set[str] = set()
+        self._progress_connection = psycopg.connect(DATABASE_URL) if website_id is not None else None
+        self._increment_progress(total=1)
+
+    def _increment_progress(self, *, total: int = 0, downloaded: int = 0) -> None:
+        if self._progress_connection is None:
+            return
+        self._progress_connection.execute(
+            """
+            UPDATE websites
+            SET download_total = download_total + %s,
+                downloaded_items = downloaded_items + %s
+            WHERE id = %s
+            """,
+            (total, downloaded, self.website_id),
+        )
+        self._progress_connection.commit()
+
+    def _asset_request(self, url: str) -> scrapy.Request | None:
+        if url in self.discovered_assets:
+            return None
+        self.discovered_assets.add(url)
+        self._increment_progress(total=1)
+        return scrapy.Request(url, callback=self.parse_asset)
+
+    def closed(self, reason: str) -> None:
+        if self._progress_connection is not None:
+            self._progress_connection.close()
 
     async def start(self):
         yield scrapy.Request(
@@ -157,7 +190,9 @@ class _WebsiteDownloadSpider(scrapy.Spider):
                 for raw_url in _srcset_urls(value) if attribute == "srcset" else [value]:
                     absolute = _clean_url(raw_url, response.url)
                     if absolute:
-                        yield scrapy.Request(absolute, callback=self.parse_asset)
+                        request = self._asset_request(absolute)
+                        if request is not None:
+                            yield request
                 if attribute == "srcset":
                     candidates = []
                     for candidate in value.split(","):
@@ -184,11 +219,14 @@ class _WebsiteDownloadSpider(scrapy.Spider):
             else:
                 node.text = rewritten
             for asset_url in assets:
-                yield scrapy.Request(asset_url, callback=self.parse_asset)
+                request = self._asset_request(asset_url)
+                if request is not None:
+                    yield request
 
         rendered = html.tostring(document, encoding="utf-8", method="html", doctype="<!DOCTYPE html>")
         self._write(destination, rendered)
         self._write_link_manifest()
+        self._increment_progress(downloaded=1)
 
     def parse_asset(self, response: scrapy.http.Response):
         destination = self._asset_path(response.url)
@@ -196,12 +234,16 @@ class _WebsiteDownloadSpider(scrapy.Spider):
         is_css = "text/css" in content_type or urlsplit(response.url).path.lower().endswith(".css")
         if not is_css:
             self._write(destination, response.body)
+            self._increment_progress(downloaded=1)
             return
 
         rewritten, discovered = self._rewrite_css(response.text, response.url, destination)
         self._write(destination, rewritten.encode())
+        self._increment_progress(downloaded=1)
         for asset_url in discovered:
-            yield scrapy.Request(asset_url, callback=self.parse_asset)
+            request = self._asset_request(asset_url)
+            if request is not None:
+                yield request
 
     def _rewrite_css(self, css: str, base_url: str, destination: Path) -> tuple[str, list[str]]:
         discovered = []
@@ -230,6 +272,7 @@ def scrape_and_download_website(
     url: str,
     output_path: str,
     cookie: str | None = None,
+    website_id: int | None = None,
 ) -> str:
     """Mirror one rendered page and the assets referenced by it."""
     settings = get_project_settings()
@@ -248,6 +291,7 @@ def scrape_and_download_website(
         url=url,
         output_path=destination,
         cookie=cookie,
+        website_id=website_id,
     )
     process.start()
     return str(destination)
@@ -257,11 +301,13 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Mirror one rendered web page")
     parser.add_argument("url")
     parser.add_argument("output_path")
+    parser.add_argument("--website-id", type=int)
     args = parser.parse_args()
     scrape_and_download_website(
         args.url,
         args.output_path,
         cookie=os.getenv("SITEFLOW_SCRAPER_COOKIE"),
+        website_id=args.website_id,
     )
 
 

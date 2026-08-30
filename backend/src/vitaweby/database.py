@@ -50,6 +50,14 @@ def init_db() -> None:
             ALTER TABLE websites
             ALTER COLUMN last_access_time SET NOT NULL
             """,
+            """
+            ALTER TABLE websites
+            ADD COLUMN IF NOT EXISTS download_total BIGINT NOT NULL DEFAULT 0
+            """,
+            """
+            ALTER TABLE websites
+            ADD COLUMN IF NOT EXISTS downloaded_items BIGINT NOT NULL DEFAULT 0
+            """,
             "DROP TABLE IF EXISTS clone_job_cookies",
             "DROP TABLE IF EXISTS clone_jobs",
         )
@@ -91,6 +99,8 @@ def create_clone_job(url: str, cookie: str | None) -> dict[str, Any]:
         "main_url": url,
         "status": "todo",
         "created_at": created_at,
+        "downloaded_items": 0,
+        "remaining_items": 0,
         "website": {
             "website_id": website_id,
             "website_name": website_name,
@@ -115,7 +125,9 @@ def get_clone_job(job_id: int) -> dict[str, Any] | None:
                 websites.name AS website_name,
                 websites.start_time,
                 websites.last_access_time,
-                websites.user_id
+                websites.user_id,
+                websites.download_total,
+                websites.downloaded_items
             FROM procrastinate_jobs
             JOIN websites
                 ON websites.id = (procrastinate_jobs.args->>'website_id')::BIGINT
@@ -130,11 +142,17 @@ def get_clone_job(job_id: int) -> dict[str, Any] | None:
     if row is None:
         return None
 
+    remaining_items = max(row["download_total"] - row["downloaded_items"], 0)
+    if row["status"] == "succeeded":
+        remaining_items = 0
+
     return {
         "job_id": row["job_id"],
         "main_url": row["main_url"],
         "status": row["status"],
         "created_at": row["created_at"],
+        "downloaded_items": row["downloaded_items"],
+        "remaining_items": remaining_items,
         "website": {
             "website_id": row["website_id"],
             "website_name": row["website_name"],
