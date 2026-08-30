@@ -72,6 +72,8 @@ def get_clone_job(job_id: int) -> CloneJobResponse:
         if isinstance(clone_job["created_at"], datetime)
         else datetime.fromisoformat(clone_job["created_at"]),
         website=clone_job["website"],
+        downloaded_items=clone_job["downloaded_items"],
+        remaining_items=clone_job["remaining_items"],
     )
 
 

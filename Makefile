@@ -4,6 +4,12 @@ WEBSITE_OUTPUT_DIR ?= $(CURDIR)/website-data
 
 .PHONY: db db-down db-logs backend frontend dev
 
+run-mac:
+	container-compose up --build
+
+run-linux:
+	container-compose up --build
+
 ## Start Postgres in the background via docker compose
 db:
 	docker compose up -d postgres

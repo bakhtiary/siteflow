@@ -23,3 +23,5 @@ class CloneJobResponse(BaseModel):
     status: str
     created_at: datetime
     website: Website
+    downloaded_items: int = 0
+    remaining_items: int = 0

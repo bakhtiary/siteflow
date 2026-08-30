@@ -32,6 +32,8 @@
   .btn:hover{background:#0b2d4d}
   .btn:active{transform:scale(0.98)}
   .hint{font-size:11px;color:#94897b;letter-spacing:0.02em}
+  .clone-progress{display:none;font-size:11px;color:#665f55;letter-spacing:0.02em;margin-top:8px}
+  .clone-progress.is-visible{display:block}
   .action-bar{display:none;align-items:center;gap:10px;margin-top:20px;padding:12px;background:#fff;border:1.5px solid #e8e0d4;border-radius:10px}
   .action-bar.is-visible{display:flex}
   .action-link{flex:1;text-align:center;text-decoration:none;padding:12px 14px;background:#faf8f4;border:1px solid #e8e0d4;border-radius:7px;font-family:var(--font-brand);font-size:10px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:#1a1814;transition:border-color 0.15s,background 0.15s}
@@ -91,6 +93,7 @@
     <button class="btn" onclick="handleClone()">Clone it</button>
   </div>
   <p class="hint" id="hintText">Try: stripe.com, linear.app, vercel.com</p>
+  <p class="clone-progress" id="cloneProgress" aria-live="polite"></p>
   <div class="action-bar" id="actionBar" aria-live="polite">
     <a class="action-link" id="controlPanelLink" target="_blank" rel="noopener noreferrer">Control panel</a>
     <a class="action-link" id="liveEditLink" target="_blank" rel="noopener noreferrer">Live edit</a>
@@ -179,10 +182,60 @@ function setActionLinks(websiteId){
   actionBar.classList.add('is-visible');
 }
 
+const POLL_INTERVAL_MS = 1000;
+
+function resetCloneButton(){
+  const btn = document.querySelector('.btn');
+  btn.textContent = 'Clone it';
+  btn.style.background = '';
+  btn.disabled = false;
+}
+
+async function pollCloneJob(jobId){
+  const hint = document.getElementById('hintText');
+  const progress = document.getElementById('cloneProgress');
+
+  try {
+    const response = await fetch(`/api/clone/${jobId}`);
+    if(!response.ok){
+      throw new Error(`Progress request failed with status ${response.status}`);
+    }
+
+    const job = await response.json();
+    const totalItems = job.downloaded_items + job.remaining_items;
+    progress.textContent = `Downloaded ${job.downloaded_items} / ${totalItems} artifacts`;
+
+    if(job.status === 'succeeded'){
+      progress.textContent += ' — complete';
+      hint.textContent = 'Done — your cloned website is ready';
+      hint.style.color = '#c05c28';
+      setActionLinks(job.website.website_id);
+      resetCloneButton();
+      return;
+    }
+
+    if(job.status === 'failed'){
+      progress.textContent += ' — failed';
+      hint.textContent = 'The clone job failed. Please try again.';
+      hint.style.color = '#c05c28';
+      resetCloneButton();
+      return;
+    }
+
+    window.setTimeout(() => pollCloneJob(jobId), POLL_INTERVAL_MS);
+  } catch (error) {
+    hint.textContent = 'Could not refresh clone progress. Please try again.';
+    hint.style.color = '#c05c28';
+    resetCloneButton();
+    console.error(error);
+  }
+}
+
 async function handleClone(){
   const val = document.getElementById('urlInput').value.trim();
   const btn = document.querySelector('.btn');
   const hint = document.getElementById('hintText');
+  const progress = document.getElementById('cloneProgress');
   const cardUrl = document.getElementById('cardUrl');
   if(!val){document.getElementById('urlInput').focus();return}
   const url = buildCloneUrl(val);
@@ -191,6 +244,8 @@ async function handleClone(){
   btn.disabled = true;
   hint.textContent = 'Creating clone job...';
   hint.style.color = '';
+  progress.textContent = 'Downloaded 0 / 0 artifacts';
+  progress.classList.add('is-visible');
   document.getElementById('actionBar').classList.remove('is-visible');
 
   try {
@@ -205,26 +260,21 @@ async function handleClone(){
     }
 
     const job = await response.json();
-    const websiteId = job.website && job.website.website_id;
-
-    if(!websiteId){
-      throw new Error('Clone response did not include a website id');
+    if(!job.job_id){
+      throw new Error('Clone response did not include a job id');
     }
 
     const display = url.replace(/^https?:\/\//,'');
     cardUrl.textContent = display;
-    hint.textContent = 'Done - your clone job is ready';
-    hint.style.color = '#c05c28';
-    setActionLinks(websiteId);
+    hint.textContent = 'Cloning website...';
     document.getElementById('urlInput').value = '';
+    pollCloneJob(job.job_id);
   } catch (error) {
     hint.textContent = 'Could not create clone job. Check the URL and try again.';
     hint.style.color = '#c05c28';
+    progress.classList.remove('is-visible');
+    resetCloneButton();
     console.error(error);
-  } finally {
-    btn.textContent = 'Clone it';
-    btn.style.background = '';
-    btn.disabled = false;
   }
 }
 document.getElementById('urlInput').addEventListener('keydown',e=>{if(e.key==='Enter')handleClone()});
